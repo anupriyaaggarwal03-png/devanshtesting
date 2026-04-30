@@ -22,14 +22,26 @@
             font-family: 'Playfair Display', serif;
             text-align: center;
             overflow: hidden;
+            transition: background 0.5s ease;
         }
 
-        /* Border Color Cycle Animation */
+        /* Rainbow Border Animation */
         @keyframes rainbowBorder {
             0% { border-color: #d4af37; box-shadow: 0 10px 40px rgba(212, 175, 55, 0.3); }
             33% { border-color: #8b0000; box-shadow: 0 10px 40px rgba(139, 0, 0, 0.3); }
             66% { border-color: #ffb6c1; box-shadow: 0 10px 40px rgba(255, 182, 193, 0.3); }
             100% { border-color: #d4af37; box-shadow: 0 10px 40px rgba(212, 175, 55, 0.3); }
+        }
+
+        /* Cinema Flash Overlay */
+        #cinema-flash {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            opacity: 0;
+            z-index: 200;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
 
         .container {
@@ -39,15 +51,16 @@
             border: 4px solid #d4af37;
             width: 85%;
             max-width: 400px;
-            z-index: 10; /* Lower than hearts/flowers */
+            z-index: 10;
             position: relative;
             animation: floatContainer 4s ease-in-out infinite, rainbowBorder 6s linear infinite;
             backdrop-filter: blur(5px);
+            transition: opacity 1s ease;
         }
 
         @keyframes floatContainer {
             0%, 100% { transform: translateY(0) rotate(-1deg); }
-            50% { transform: translateY(-15px) rotate(1deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
         }
 
         .media-style {
@@ -62,7 +75,7 @@
             animation: rainbowBorder 6s linear infinite;
         }
 
-        /* --- INTERACTIVE ENVELOPE --- */
+        /* --- ENVELOPE --- */
         #envelope-wrapper {
             display: none;
             cursor: pointer;
@@ -73,13 +86,8 @@
             position: relative;
             margin: 20px auto;
             perspective: 1000px;
-            z-index: 20; /* High priority */
+            z-index: 20;
             animation: rainbowBorder 6s linear infinite;
-            transition: transform 0.3s ease;
-        }
-
-        #envelope-wrapper:hover {
-            transform: scale(1.05);
         }
 
         #envelope-lid {
@@ -94,10 +102,7 @@
             transition: transform 1s ease-in-out;
         }
 
-        .envelope-open #envelope-lid {
-            transform: rotateX(180deg);
-            z-index: 5; 
-        }
+        .envelope-open #envelope-lid { transform: rotateX(180deg); z-index: 5; }
 
         #wax-seal {
             position: absolute;
@@ -125,12 +130,7 @@
             100% { transform: translate(600px, -800px) rotate(60deg) scale(0); opacity: 0; }
         }
 
-        h1 {
-            font-family: 'Pinyon Script', cursive;
-            color: #8b0000;
-            font-size: 2.5rem;
-            margin: 0.5rem 0;
-        }
+        h1 { font-family: 'Pinyon Script', cursive; color: #8b0000; font-size: 2.5rem; margin: 0.5rem 0; }
 
         button {
             padding: 12px 25px;
@@ -140,34 +140,29 @@
             border: 2px solid #d4af37;
             background: white;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease;
             font-size: 0.8rem;
             animation: rainbowBorder 6s linear infinite;
         }
 
         #yesBtn { background: #8b0000; color: white; border: none; }
-        #yesBtn:hover { transform: scale(1.1); background: #a52a2a; }
+        .pulse-glow { animation: glowing 1.5s infinite; }
 
-        #noBtn {
-            position: relative;
-            transition: all 0.2s ease;
+        @keyframes glowing {
+            0% { box-shadow: 0 0 5px #8b0000; }
+            50% { box-shadow: 0 0 20px rgba(139, 0, 0, 0.4); }
+            100% { box-shadow: 0 0 5px #8b0000; }
         }
 
-        #celebration, #flower-page, #wait-wait-text { display: none; }
-        
-        #flower-page {
-            z-index: 100; /* Ensure flowers are at the very top */
-        }
+        #celebration, #flower-page { display: none; opacity: 0; }
 
         .flower-img {
             width: 100%;
             max-width: 280px;
             border-radius: 10px;
             border: 4px double #d4af37;
-            animation: fadeIn 2s ease, rainbowBorder 6s linear infinite;
+            animation: rainbowBorder 6s linear infinite;
         }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* HEARTS LAYERED OVER EVERYTHING */
         .heart {
@@ -176,50 +171,47 @@
             font-size: 20px;
             pointer-events: none;
             animation: floatUp 5s linear forwards;
-            opacity: 0.8;
             z-index: 999; 
         }
 
         @keyframes floatUp {
-            0% { transform: translateY(0) rotate(0deg); }
-            100% { transform: translateY(-100vh) rotate(360deg); }
+            0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
+    <div id="cinema-flash"></div>
+
     <audio id="bgMusic" loop>
         <source src="music.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- Page 1 -->
     <div class="container" id="main-content">
         <img src="us.jpeg" alt="Portrait" class="media-style">
         <h1>Dearest Devansh,</h1>
         <p style="font-style: italic; color: #555;">Would you do me the immense honor of being my boyfriend?</p>
         <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
-            <button id="yesBtn" onclick="celebrate()">I shall</button>
-            <button id="noBtn" onmouseover="moveNoButton()" onclick="makeYesBigger()">I cannot</button>
+            <button id="yesBtn" onclick="movieSequence()">I shall</button>
+            <button id="noBtn" onclick="makeYesBigger()">I cannot</button>
         </div>
     </div>
 
-    <!-- Page 2 -->
     <div id="celebration" class="container">
-        <video id="successVideo" class="media-style" autoplay muted loop playsinline>
+        <video id="successVideo" class="media-style" muted loop playsinline>
             <source src="celebration.mp4" type="video/mp4">
         </video>
-        <h1>Best Decision Ever!</h1>
-        <div id="wait-wait-text" style="color:#d4af37; font-style:italic;">Wait, wait...</div>
+        <h1>Best Decision ever!❤️</h1>
+        <div id="wait-wait-text" style="display:none; color:#d4af37; font-style:italic;">Wait, wait...</div>
     </div>
 
-    <!-- The Letter/Envelope -->
     <div id="envelope-wrapper" onclick="openEnvelope()">
         <div id="envelope-lid"></div>
         <div id="wax-seal">❤</div>
         <div style="position:absolute; bottom: 20px; width: 100%; font-size: 12px; color: #d4af37; font-style: italic;">Tap to open your letter</div>
     </div>
 
-    <!-- Page 3 -->
     <div id="flower-page" class="container">
         <img src="flowers.jpeg" alt="Flowers" class="flower-img" id="finalFlowers">
         <p style="margin-top: 15px; font-style: italic; color: #d4af37;">Forever yours.</p>
@@ -235,50 +227,59 @@
             audio.play().catch(() => {});
         }
 
-        // Interactive: Move "No" button
-        function moveNoButton() {
-            const btn = document.getElementById('noBtn');
-            const x = Math.random() * (window.innerWidth - 100) - window.innerWidth/4;
-            const y = Math.random() * (window.innerHeight - 50) - window.innerHeight/4;
-            btn.style.transform = `translate(${x}px, ${y}px)`;
-        }
-
         function makeYesBigger() {
             playMusic();
             const yesBtn = document.getElementById('yesBtn');
+            const noBtn = document.getElementById('noBtn');
+            yesBtn.classList.add('pulse-glow');
             yesSize += 0.3;
             yesBtn.style.transform = `scale(${yesSize})`;
             if (messageIndex < messages.length) {
-                document.getElementById('noBtn').innerText = messages[messageIndex];
+                noBtn.innerText = messages[messageIndex];
                 messageIndex++;
             }
         }
 
-        function celebrate() {
+        function movieSequence() {
             playMusic();
-            document.getElementById('main-content').style.display = 'none';
-            document.getElementById('celebration').style.display = 'block';
-            startConfetti();
-
-            setTimeout(() => { document.getElementById('wait-wait-text').style.display = 'block'; }, 35000);
-
+            const flash = document.getElementById('cinema-flash');
+            flash.style.opacity = '1';
+            
             setTimeout(() => {
-                document.getElementById('celebration').style.display = 'none';
-                document.getElementById('envelope-wrapper').style.display = 'block';
-            }, 39000);
+                document.getElementById('main-content').style.display = 'none';
+                document.body.style.backgroundImage = 'none';
+                document.body.style.backgroundColor = 'black';
+                flash.style.opacity = '0';
+                
+                setTimeout(() => {
+                    const celebration = document.getElementById('celebration');
+                    celebration.style.display = 'block';
+                    setTimeout(() => { celebration.style.opacity = '1'; }, 100);
+                    
+                    const video = document.getElementById('successVideo');
+                    video.play();
+                    
+                    startConfetti();
+                    
+                    setTimeout(() => { document.getElementById('wait-wait-text').style.display = 'block'; }, 35000);
+
+                    setTimeout(() => {
+                        document.getElementById('celebration').style.display = 'none';
+                        document.getElementById('envelope-wrapper').style.display = 'block';
+                    }, 39000);
+                }, 1500);
+            }, 300);
         }
 
         function openEnvelope() {
             const wrapper = document.getElementById('envelope-wrapper');
             wrapper.classList.add('envelope-open');
-            
             setTimeout(() => {
                 wrapper.classList.add('flying');
                 setTimeout(() => {
                     wrapper.style.display = 'none';
-                    const flowerPage = document.getElementById('flower-page');
-                    flowerPage.style.display = 'block';
-                    // Flowers and hearts are now z-index 100+
+                    document.getElementById('flower-page').style.display = 'block';
+                    setTimeout(() => { document.getElementById('flower-page').style.opacity = '1'; }, 100);
                     setInterval(createHeart, 400);
                 }, 1500);
             }, 1000);
@@ -290,7 +291,6 @@
             const icons = ['🌸', '💗', '❤️', '✨'];
             heart.innerHTML = icons[Math.floor(Math.random()*icons.length)];
             heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.fontSize = Math.random() * 20 + 20 + 'px';
             document.body.appendChild(heart);
             setTimeout(() => { heart.remove(); }, 5000);
         }
@@ -302,13 +302,11 @@
                 var timeLeft = animationEnd - Date.now();
                 if (timeLeft <= 0) return clearInterval(interval);
                 confetti({ 
-                    particleCount: 3, 
-                    angle: 60, spread: 55, origin: { x: 0 },
+                    particleCount: 2, angle: 60, spread: 55, origin: { x: 0 },
                     colors: ['#d4af37', '#8b0000', '#ffb6c1']
                 });
                 confetti({ 
-                    particleCount: 3, 
-                    angle: 120, spread: 55, origin: { x: 1 },
+                    particleCount: 2, angle: 120, spread: 55, origin: { x: 1 },
                     colors: ['#d4af37', '#8b0000', '#ffb6c1']
                 });
             }, 150);
